@@ -102,7 +102,7 @@ const GetMovies = ({ user }) => {
         <div key={gid.id}> 
             <p className="font-extrabold">{gid.name}</p>
             <span>
-                <Moviegenre genreId={gid.id}/>
+                <Moviegenre user={user} genreId={gid.id}/>
             </span>
         {/*
           <img src={`https://image.tmdb.org/t/p/original/${movie.poster_path}`} alt={`${movie.original_title}`} />

@@ -11,6 +11,10 @@ import Authlogin from './auth/Authlogin'
 import Profile from './components/Profile';
 import UserWishlist from './components/UserWishList';
 import Userlist from './components/Lists'
+import Movie from './components/Movie';
+import StarRating from './components/StarRating';
+import ListMovies from './components/ListMovies';
+import Directors from './components/Directors';
 
 function App() {
   return (
@@ -22,6 +26,10 @@ function App() {
         <Route path="/user/profile" element={<Profile />} />
         <Route path="/user/Wishlist" element={<UserWishlist />} />
         <Route path="/user/List" element={<Userlist />} />
+        <Route path='/movie/:name' element={<Movie />}/>
+        <Route path='/movie/rating' element={<StarRating />}/>
+        <Route path='/user/list/:id' element={<ListMovies />}/>
+        <Route path='/user/director/:id' element={<Directors />}/>
       </Routes>
     </>
   )

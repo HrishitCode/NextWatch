@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import StarRating from './StarRating'; // Assuming StarRating is a component you have
 
 const Lists = () => {
     const location = useLocation();
-    const [ movdata, setMovdata ] = useState(null);
+    const [movdata, setMovdata] = useState(null);
     const { user, temMov } = location.state || {};
     useEffect(() => {
         setMovdata(temMov);
-    }, [temMov])
+    }, [temMov]);
     console.log('chalo dekhte hain : ', movdata);
     const [lists, setLists] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -20,7 +21,7 @@ const Lists = () => {
         if (movdata){
             setSelect(true);
         }
-    }, [movdata])
+    }, [movdata]);
 
     useEffect(() => {
         const getData = async () => {
@@ -37,7 +38,6 @@ const Lists = () => {
                 }
                 const data = await response.json();
                 const list_ids = data[0].list_id;
-                //console.log('happened >',list_ids);
                 const saveListPromises = list_ids.map(async (lid)=>{
                     const response = await fetch(`http://localhost:3001/showlist`, {
                     method: 'POST',
@@ -59,10 +59,8 @@ const Lists = () => {
                     const listData = await Promise.all(saveListPromises);
                     setLists(listData);
                     console.log('List data:', lists);
-                    // Handle the fetched list data here
                 } catch (error) {
                     console.error('Error fetching list data:', error);
-                    // Handle error
                 }
 
             } catch(error) {
@@ -101,12 +99,14 @@ const Lists = () => {
             setConfirm(null);
             setSelect(false);
             setMovdata(null);
+            navigate(`/user/list/${datatoAdd.listID}`, {state: {user : user, listid : datatoAdd.listID}})
         } catch(error) {
             console.log("ERROR : ", error);
         }
     }
 
     const handleAddSubmit = async () => {
+        console.log("AARARarrarara");
         try {
             const response = await fetch(`http://localhost:3001/addlist`, {
                 method: 'POST',
@@ -123,12 +123,7 @@ const Lists = () => {
             setLists(prevLists => [...prevLists, updatedLists]);
             setNewListName('');
             setShowAddForm(false);
-            /*if (movdata)
-            {
-                setConfirm(updatedLists);
-                console.log("CONFIRM : ", confirm);
-                addtoList();
-            }*/
+
         } catch(error) {
             console.log("ERROR : ", error);
         }
@@ -138,22 +133,53 @@ const Lists = () => {
         console.log(movd[0]);
         setConfirm(movd[0]);
     }
+
     return (
-        <div>
-            {lists && lists.map((listName, index) => (
-                <div key={index}>
-                    <p onClick={() => handleEvent(listName)}>{listName[1]}</p>
-                    {select && confirm == listName[0] ? <button onClick={()=>addtoList()}>Select</button> : null}
-                </div>
-            ))}
-            {!showAddForm ? (
-                <button onClick={handleAddList}>ADD</button>
-            ) : (
-                <div>
-                    <input type="text" value={newListName} onChange={handleNewListNameChange} />
-                    <button onClick={handleAddSubmit}>Submit</button>
-                </div>
+        <div className="max-w-4xl mx-auto bg-white rounded-lg overflow-hidden shadow-lg p-6">
+            {movdata && (
+                <>
+                    <div className="flex justify-between items-start">
+                        <div className="flex flex-col">
+                            <h1 className="text-2xl font-bold mb-2">{movdata.title}</h1>
+                            <p className="text-base mb-4">{movdata.overview}</p>
+                        </div>
+                        <img className="w-48 h-auto ml-4" src={`https://image.tmdb.org/t/p/original/${movdata.poster_path}`} alt={movdata.title} />
+                    </div>
+                    <div className="mt-4">
+                        <StarRating user={user} movie={movdata}/>
+                    </div>
+                </>
             )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {lists && lists.map((listName, index) => (
+                    <div key={index} className="border border-gray-300 p-4 rounded-lg hover:shadow-md cursor-pointer flex items-center justify-between" onClick={() => handleEvent(listName)}>
+                        <div className="flex items-center">
+                            <div className="mr-3">
+                                <svg className="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fillRule="evenodd" d="M2 5a2 2 0 012-2h4a2 2 0 011.414.586L10 5h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v8a1 1 0 001 1h12a1 1 0 001-1V7a1 1 0 00-1-1h-6.586l-.707-.707A1 1 0 009 5H4z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <p>{listName[1]}</p>
+                        </div>
+                        {select && confirm === listName[0] ? (
+                            <button onClick={addtoList} className="bg-blue-500 text-white px-4 py-2 rounded">Select</button>
+                        ) : null}
+                    </div>
+                ))}
+                {!showAddForm ? (
+                    <button onClick={handleAddList} className="bg-green-500 text-white px-4 py-2 rounded">ADD</button>
+                ) : (
+                    <div>
+                        <input 
+                            type="text" 
+                            value={newListName} 
+                            onChange={handleNewListNameChange} 
+                            className="border border-gray-300 p-2 rounded mb-2"
+                        />
+                        <button onClick={handleAddSubmit} className="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

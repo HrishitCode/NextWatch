@@ -9,6 +9,7 @@ const Wishlist = require('./database/Wishlist')
 const Lists = require('./database/Lists')
 const UserLists = require('./database/UserLists')
 const WatchedMovies = require('./database/WatchedMovies')
+const OpenAI = require('openai');
 
 
 app.use(cors());
@@ -18,7 +19,6 @@ connectt();
 function midlogin(req, res, next){
     next();
 }
-
 
 app.post('/login', midlogin, async (req, res) => {
     //console.log(req.body);
@@ -53,11 +53,9 @@ app.post('/addRating', async (req, res) => {
     const { email, movie_ID, rating } = req.body;
 
     try {
-        // Check if the email exists
         const watchedMovie = await WatchedMovies.findOne({ email });
 
         if (!watchedMovie) {
-            // If the email doesn't exist, create a new document
             const newWatchedMovie = new WatchedMovies({
                 email,
                 movie_id: [movie_ID],
@@ -66,7 +64,6 @@ app.post('/addRating', async (req, res) => {
             await newWatchedMovie.save();
             return res.json({ message: 'New entry added successfully' });
         } else {
-            // If the email exists, check if the movie ID is already present
             const existingRating = watchedMovie.ratings.find(r => r.movie_id === movie_ID);
 
             if (existingRating) {
@@ -88,36 +85,54 @@ app.post('/addRating', async (req, res) => {
     }
 });
 
+app.post('/showRating', async (req, res)=>{
+    const { email, movie_ID } = req.body;
 
+    try {
+        const watchedMovie = await WatchedMovies.findOne({ email });
+
+        if (watchedMovie) {
+            const existingRating = watchedMovie.ratings.find(r => r.movie_id === movie_ID);
+
+            if (existingRating) {
+                console.log(existingRating);
+                await watchedMovie.save();
+                return res.send({rating : existingRating.rating});
+            } else {
+                return res.send({rating : 0});
+            }
+        } else {
+            return res.send({ rating: 0 });
+          }
+    } catch (error) {
+        console.error('Error occurred:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 app.post('/addWishlist', async (req, res) => {
     console.log(req.body);
     const email = req.body.email;
     const movie_ID = req.body.mvid;
-    try{
-        const responsed = await Wishlist.findOneAndUpdate({ email }, { $push: { movie_id: movie_ID } }, { new: true });
-        if (responsed > 0)
-            return res.send({message : 'Successfully updated the Wishlist'});
+  
+    try {
+      // Update the document if movie_ID is not already present in the movie_id array
+      const response = await Wishlist.findOneAndUpdate(
+        { email },
+        { $addToSet: { movie_id: movie_ID } }, // Use $addToSet to ensure uniqueness
+        { new: true, upsert: true } // Create a new document if not found
+      );
+  
+      if (response) {
+        console.log('Wishlist updated successfully:', response);
+        return res.json({ message: 'Successfully updated the Wishlist', data: response });
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error);
+      return res.status(500).json({ message: 'Failed to update wishlist', error: error.message });
     }
-    catch(error)
-    {
-        console.log("some error occurred here");
-    }
-    const newData = new Wishlist({
-        email: email,
-        movie_id: [movie_ID],
-      });
-      
-      newData.save()
-        .then((savedData) => {
-          console.log('Data saved successfully:', savedData);
-        })
-        .catch((error) => {
-          console.error('Error saving data:', error);
-        });
-    const data = { message: 'Saved on the database' };
-    res.json(data);   
-})
+  });
+  
 
 app.post('/removeWishlist', async (req, res) => {
     const { email, mvid } = req.body;
@@ -197,7 +212,7 @@ app.post('/showlist', async (req, res) => {
 })
 
 app.post('/addlist', async (req, res) => {
-    console.log(req.body);
+    console.log('The list Data', req.body);
     const email = req.body.email;
     const list_name = req.body.newListName;
     const newData = new Lists({
@@ -241,10 +256,27 @@ app.post('/addtolist', async (req, res) => {
     {
         console.log("some error occurred here");
     }   
-
-
-
 })
+
+app.post('/show/listMovies', async (req, res) => {
+    console.log(req.body);
+    const lid = req.body.listid;
+
+    try {
+        const response = await Lists.find({_id: lid}).exec();
+        
+        if (response.length > 0) {
+            console.log(response[0].movies);
+            res.json({title : response[0].Name ,movies : response[0].movies});
+        } else {
+            return res.status(404).send('List not found');
+        }
+    } catch (e) {
+        console.error('Error fetching list:', e);
+        return res.status(500).send('Internal Server Error');
+    }
+});
+
 
 app.listen(3001, ()=>{
     console.log("Port is running");
