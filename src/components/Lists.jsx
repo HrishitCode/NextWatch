@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import StarRating from './StarRating'; // Assuming StarRating is a component you have
+import ListMovies from "./ListMovies";
+import Navbar from "./Navbar";
 
 const Lists = () => {
     const location = useLocation();
@@ -133,9 +135,11 @@ const Lists = () => {
         console.log(movd[0]);
         setConfirm(movd[0]);
     }
-
     return (
+        <>
+        {!movdata && <Navbar user={user}/>}
         <div className="max-w-4xl mx-auto bg-white rounded-lg overflow-hidden shadow-lg p-6">
+            <h1 className="text-3xl font-semibold mb-4">{user.nickname}'s Lists</h1>
             {movdata && (
                 <>
                     <div className="flex justify-between items-start">
@@ -161,9 +165,10 @@ const Lists = () => {
                             </div>
                             <p>{listName[1]}</p>
                         </div>
-                        {select && confirm === listName[0] ? (
+                        {select && confirm === listName[0] && (
                             <button onClick={addtoList} className="bg-blue-500 text-white px-4 py-2 rounded">Select</button>
-                        ) : null}
+                        )}
+                        {!select && confirm === listName[0] && navigate(`/user/list/0`, {state: {user : user, listid : listName[0]}})}
                     </div>
                 ))}
                 {!showAddForm ? (
@@ -181,6 +186,7 @@ const Lists = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

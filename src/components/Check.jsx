@@ -3,11 +3,9 @@ import { useState } from "react";
 
 const Checking = () => {
     const {loginWithRedirect} = useAuth0();
-
+    loginWithRedirect()
     return (
-        <>
-            <button onClick={()=>loginWithRedirect()}>here</button>
-        </>
+        <></>
     )
 }
 

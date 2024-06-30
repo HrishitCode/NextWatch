@@ -1,10 +1,11 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-
+import Home from "../components/Home";
 const Authlogin = () => {
     const navigate = useNavigate();
     const {user} = useAuth0();
+    const [logged, setLogged] = useState(false);
     useEffect(() => {
         console.log(user);
         async function sendData(data)
@@ -20,7 +21,7 @@ const Authlogin = () => {
                 if (!response.ok){
                     throw new Error('Network Response was not ok');
                 }
-                navigate('/');
+                setLogged(true);
             }
             catch(error)
             {
@@ -35,7 +36,9 @@ const Authlogin = () => {
             console.log("waiting");
     },[user])
     return(
-        <h1>Aa rha hai balak</h1>
+        <>
+            {logged && navigate('/', {state : {user : user}})};
+        </>
     )
 }
 

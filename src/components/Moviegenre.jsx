@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from "react";
-import Movie from "./Movie";
+import React, { useState, useEffect, useRef } from "react";
 import StarRating from "./StarRating";
 import { useNavigate } from "react-router-dom";
 import AddtoWishlist from "./AddtoWishlist";
-//import './Moviegenre.css'
 
 const fetchMoviesByGenre = async (genreId) => {
   const movieUrl = `https://api.themoviedb.org/3/discover/movie?language=en&with_genres=${genreId}`;
@@ -21,30 +19,25 @@ const fetchMoviesByGenre = async (genreId) => {
       throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    console.log(data);
     return data.results;
   } catch (error) {
     console.error('Error fetching movies by genre:', error);
+    throw error;
   }
 };
 
-
 const Moviegenre = ({ user, genreId }) => {
-  console.log('here : ', user);
-  console.log('here : ', genreId);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [datatoSend, setDatatoSend] = useState(null); 
+  const [datatoSend, setDatatoSend] = useState(null);
   const [options, setOptions] = useState(false);
   const [showPopup, setShowPopup] = useState(null);
-  const [selectedRating, setSelectedRating] = useState(null);
   const [wishMovie, setWishMovie] = useState(null);
-  
-  const wishandle = (data) => {
-    setWishMovie(data.id);
-  }
+
   const navigate = useNavigate();
+  const scrollContainerRef = useRef(null); // Ref for the scroll container
+
   useEffect(() => {
     const fetchMovies = async () => {
       try {
@@ -60,41 +53,65 @@ const Moviegenre = ({ user, genreId }) => {
     fetchMovies();
   }, [genreId]);
 
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+
+    const handleWheel = (event) => {
+      if (scrollContainer) {
+        scrollContainer.scrollLeft += event.deltaY;
+      }
+    };
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('wheel', handleWheel);
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, [scrollContainerRef]); // Correct dependency array
+
+  const listhandle = (mov) => {
+    setOptions(true);
+    setDatatoSend(mov);
+  };
+
+  const handleRating = (mov) => {
+    setDatatoSend(mov);
+    setShowPopup(mov.id);
+  };
+
+  const onMovieclick = (movv) => {
+    navigate(`/movie/${movv.original_title}`, { state: { user: user, movie: movv } });
+  };
+
+  const wishandle = (data) => {
+    setWishMovie(data.id);
+  };
+
+  const RatingPopup = ({ movie }) => (
+    <div className="absolute bottom-5 left-0 bg-white p-2 rounded shadow-lg">
+      <h2 className="text-black text-center">RATING</h2>
+      <StarRating user={user} movie={movie} />
+    </div>
+  );
+
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-16 h-16 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (error) {
     return <p>Error: {error.message}</p>;
   }
 
-  const listhandle = (mov) => {
-    setOptions(true);
-    setDatatoSend(mov);
-  }
-
-  const handleRating = (mov) => {
-    setDatatoSend(mov);
-    setShowPopup(mov.id);
-  }
-
-  const onMovieclick = (movv) =>{
-    console.log(movv);
-    navigate(`/movie/${movv.original_title}`, {state:{ user : user, movie : movv}})
-  }
-
-
-  const RatingPopup = ({ movie }) => (
-    <>
-        <div className="absolute bottom-5 left-0 bg-white p-2 rounded shadow-lg">
-          <h2 className="text-black text-center">RATING</h2>
-          <StarRating user={user} movie={movie} />
-      </div>
-    </>
-  );
-
   return (
-    <div className="flex overflow-x-auto overflow-y-hidden space-x-4" style={{ "-ms-overflow-style": "none", "scrollbar-width": "none", "::-webkit-scrollbar": "none" }}>
+    <div ref={scrollContainerRef} className="flex overflow-x-auto overflow-y-hidden space-x-4" style={{ "-ms-overflow-style": "none", "scrollbar-width": "none", "::-webkit-scrollbar": "none" }}>
       {movies.length > 0 &&
         movies.map(movie => (
           <div key={movie.id} className="relative flex-shrink-0 w-48 transform hover:scale-110 transition-transform duration-300 ease-in-out group">
@@ -109,7 +126,6 @@ const Moviegenre = ({ user, genreId }) => {
             {showPopup === movie.id && <RatingPopup movie={movie} />}
           </div>
         ))
-        
       }
     </div>
   );

@@ -277,6 +277,25 @@ app.post('/show/listMovies', async (req, res) => {
     }
 });
 
+app.post('/user/watchedmovies', async(req, res) => {
+    console.log(req);
+    const email = req.body.email;
+    try {
+        const response = await WatchedMovies.find({email : email});
+        if (response){
+            console.log(response[0].ratings);
+            res.json(response[0].ratings);
+        }
+        else{
+            return res.status(404).send('List not found');
+        }
+    }
+    catch(e)
+    {
+        conosle.log("Error fetching User's watched movies");
+        return res.status(500).send('Internal Server Error');
+    }
+})
 
 app.listen(3001, ()=>{
     console.log("Port is running");

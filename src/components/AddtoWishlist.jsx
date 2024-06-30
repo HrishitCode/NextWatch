@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 
 const AddtoWishlist = ({ user, data }) => {
     const navigate = useNavigate();
+    console.log(user);
   const sendData = async (user) => {
     try {
       const response = await fetch('http://localhost:3001/addWishlist', {
@@ -23,7 +24,6 @@ const AddtoWishlist = ({ user, data }) => {
         showConfirmButton: false,
         timer: 1500
       });
-      navigate('/user/Wishlist', {state:{user : user}});
     } catch (error) {
       Swal.fire({
         icon: 'error',

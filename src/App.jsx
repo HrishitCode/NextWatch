@@ -15,6 +15,8 @@ import Movie from './components/Movie';
 import StarRating from './components/StarRating';
 import ListMovies from './components/ListMovies';
 import Directors from './components/Directors';
+import Letmeguess from './components/Letmeguess';
+import WatchedMovies from './components/WatchedMovies';
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
         <Route path='/movie/rating' element={<StarRating />}/>
         <Route path='/user/list/:id' element={<ListMovies />}/>
         <Route path='/user/director/:id' element={<Directors />}/>
+        <Route path='/letmeguess' element={<Letmeguess />} />
+        <Route path='/user/Watched' element={<WatchedMovies />} />
       </Routes>
     </>
   )
